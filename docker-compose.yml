@@ -1,0 +1,89 @@
+version: "3.5"
+
+networks:
+  "01":
+
+services:
+  influxdb:
+    restart: unless-stopped
+    image: influxdb:latest
+    networks:
+      - "01"
+    container_name: influxdb
+    hostname: influxdb
+    ports:
+      - "2003:2003"
+      - "8086:8086"
+    environment:
+      INFLUXDB_GRAPHITE_ENABLED: "true"
+      # terrible hack
+      INFLUXDB_DB: "sensors; CREATE DATABASE cadvisor;"
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /media/usb/influxdb/data/:/var/lib/influxdb/
+
+  grafana:
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    image: grafana/grafana:latest
+    networks:
+      - "01"
+    container_name: grafana
+    hostname: grafana
+    user: "1000"
+    ports:
+      - "3000:3000"
+    environment:
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,briangann-gauge-panel,natel-plotly-panel"
+      GF_SECURITY_ADMIN_USER: "admin"
+      GF_SECURITY_ADMIN_PASSWORD: "supersecret"
+      GF_USERS_DEFAULT_THEME: "dark"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_ALLOW_ORG_CREATE: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - ./grafana/data/:/var/lib/grafana/
+
+  # container-monitoring (optional)
+  cadvisor:
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    image: budry/cadvisor-arm
+    networks:
+      - "01"
+    container_name: cadvisor
+    hostname: cadvisor
+#   command: -storage_driver=influxdb -storage_driver_db=cadvisor -storage_driver_host=influxdb:8086
+    ports:
+      - "8080:8080"
+    volumes:
+      - /etc/timezone:/etc/timezone
+      - /:/rootfs/:ro
+      - /var/run/:/var/run/:rw
+      - /sys/:/sys/:ro
+      - /var/lib/docker/:/var/lib/docker/:ro
+
+  sdr:
+     restart: unless-stopped
+     depends_on:
+        - influxdb
+     image: mboehm21/sdr_receiver:latest
+     networks:
+       - "01"
+     container_name: sdr
+     hostname: sdr
+     environment:
+       SDR_PARAMS: "-G"
+       INFLUX_SRV: "influxdb"
+       INFLUX_PORT: "8086"
+       INFLUX_USER: ""
+       INFLUX_PW: ""
+       INFLUX_NAME: "sensors"
+       SENSOR_LaCrosseTXSensor_125: "neighborhood"
+     devices:
+        - /dev/bus/usb/001/005
+     volumes:
+       - /etc/timezone:/etc/timezone

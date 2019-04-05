@@ -1,0 +1,3 @@
+- See docker-compose.yml for usage-examples
+- Base software: https://github.com/merbanan/rtl_433
+- Tested hardware: https://www.amazon.de/NooElec-NESDR-Mini-USB-Empf%C3%A4nger-Set-Female-SMA-Adapter/dp/B00VZ1AWQA/ref=sr_1_fkmrnull_2_sspa?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&keywords=sdr+433+stick&qid=1554484622&s=gateway&sr=8-2-fkmrnull-spons&psc=1
