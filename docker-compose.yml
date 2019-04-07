@@ -16,7 +16,6 @@ services:
       - "8086:8086"
     environment:
       INFLUXDB_GRAPHITE_ENABLED: "true"
-      # terrible hack
       INFLUXDB_DB: "sensors; CREATE DATABASE cadvisor;"
     volumes:
       - /etc/timezone:/etc/timezone
@@ -46,7 +45,6 @@ services:
       - /etc/timezone:/etc/timezone
       - ./grafana/data/:/var/lib/grafana/
 
-  # container-monitoring (optional)
   cadvisor:
     restart: unless-stopped
     depends_on:
@@ -82,7 +80,10 @@ services:
        INFLUX_USER: ""
        INFLUX_PW: ""
        INFLUX_NAME: "sensors"
-       SENSOR_LaCrosseTXSensor_125: "neighborhood"
+       LaCrosseTXSensor_ID125: "neighborhood"
+       Prologuesensor_ID5_RID83: "grill"
+       Prologuesensor_ID5_RID201: "livingroom"
+       Prologuesensor_ID5_RID240: "well"
      devices:
         - /dev/bus/usb/001/005
      volumes:

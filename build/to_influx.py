@@ -5,6 +5,11 @@ import json
 import os
 from influxdb import InfluxDBClient # apt-get install -y python3-influxdb
 
+# Set this to 1 if we only want to write the sensors defined as env-variable
+# to be written to db
+
+drop_undefined_sensors = 0
+
 # get ENV
 
 dbsrv = os.environ['INFLUX_SRV']
@@ -47,35 +52,71 @@ tags = {}
 # we don't use the time from the sensor, InfluxDB will set it according to its clock
 json_input.pop("time")
 
-# if there is an environment-variable for this sensor, tag the entry with a sensor-description
-# example:
-# export SENSOR_LaCrosseTXSensor_125 = "garden"
+# Find a unique name for the measurement
 
-if "id" in json_input and "model" in json_input and "SENSOR_" + json_input["model"] + "_" + str(json_input["id"]) in os.environ:
-    print("This sensor is well-known.")
-    tags["description"] = os.environ["SENSOR_" + json_input["model"] + "_" + str(json_input["id"])]
+measurement_name = ""
 
-# name of the measurement
-
-measurement_name = "sensor-"
-
-if "model" in json_input and json_input["model"] != "":
-    measurement_name = measurement_name + json_input["model"]
-    json_input.pop("model")
+if "model" in json_input:
+	measurement_name = json_input["model"]
+	json_input.pop("model")
 else:
-    measurement_name = measurement-name + "unknown_type-"
-    if "id" in json_input:
-        measurement_name = measurement-name + str(json_input("id"))
+	measurement_name = unkown_sensor
 
 if "id" in json_input:
-    tags["id"] = json_input["id"]
-    json_input.pop("id")
+	measurement_name = measurement_name + "_ID" + str(json_input["id"])
+	json_input.pop("id")
+
+if "rid" in json_input:
+	measurement_name = measurement_name + "_RID" + str(json_input["rid"])
+	json_input.pop("rid")
+
+# Look up if there is a description for this sensor in the env-variables
+# and add it as tag if there is.
+
+# Example: export VendorSensor_ID111_RID333="Garden 2"
+
+if measurement_name in os.environ:
+	print("This sensor is well-known as " + os.environ[measurement_name] + ".")
+	tags["description"] = os.environ[measurement_name]
+
+# Stop here if we do not want to datamine the whole neighborship
+
+elif drop_undefined_sensors:
+	exit(0)
+
+# extract metadata-tags
 
 if "channel" in json_input:
-    tags["channel"] = json_input["channel"]
-    json_input.pop("channel")
+	tags["channel"] = json_input["channel"]
+	json_input.pop("channel")
+
+if "flags" in json_input:
+	tags["flags"] = json_input["flags"]
+	json_input.pop("flags")
+
+if "type" in json_input:
+	tags["type"] = json_input["type"]
+	json_input.pop("type")
+
+if "code" in json_input:
+	tags["code"] = json_input["code"]
+	json_input.pop("code")
+
+if "sid" in json_input:
+	tags["sid"] = json_input["sid"]
+	json_input.pop("sid")
+
+if "transmit" in json_input:
+	tags["code"] = json_input["transmit"]
+	json_input.pop("transmit")
+
+if "mic" in json_input:
+	tags["mic"] = json_input["mic"]
+	json_input.pop("mic")
 
 # everything else should be measurement data
+# if not, extract it here like the examples above
+
 fields = json_input
 
 json_body = [ { "measurement" : measurement_name, "tags" : tags, "fields" : fields  } ]
