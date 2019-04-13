@@ -60,7 +60,7 @@ if "model" in json_input:
 	measurement_name = json_input["model"]
 	json_input.pop("model")
 else:
-	measurement_name = unkown_sensor
+	measurement_name = "unkown_sensor"
 
 if "id" in json_input:
 	measurement_name = measurement_name + "_ID" + str(json_input["id"])
@@ -70,14 +70,15 @@ if "rid" in json_input:
 	measurement_name = measurement_name + "_RID" + str(json_input["rid"])
 	json_input.pop("rid")
 
-# Look up if there is a description for this sensor in the env-variables
-# and add it as tag if there is.
+# Look up if there is a user-defined name for this sensor in the env-variables
+# and use it as the name of the measurement.
 
-# Example: export VendorSensor_ID111_RID333="Garden 2"
+# Example: export VendorSensor_ID111_RID333="Garden-2"
 
 if measurement_name in os.environ:
 	print("This sensor is well-known as " + os.environ[measurement_name] + ".")
-	tags["description"] = os.environ[measurement_name]
+	tags["description"] = measurement_name
+	measurement_name = os.environ[measurement_name]
 
 # Stop here if we do not want to datamine the whole neighborship
 
