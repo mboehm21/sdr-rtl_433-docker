@@ -5,6 +5,18 @@ networks:
 
 services:
   influxdb:
+
+    See docker-compose.yml for (totally not secure) usage-examples
+    Base software: https://github.com/merbanan/rtl_433
+    Tested hardware: https://www.amazon.de/NooElec-NESDR-Mini-USB-Empf%C3%A4nger-Set-Female-SMA-Adapter/dp/B00VZ1AWQA/ref=sr_1_fkmrnull_2_sspa?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&keywords=sdr+433+stick&qid=1554484622&s=gateway&sr=8-2-fkmrnull-spons&psc=1
+
+
+
+    See docker-compose.yml for (totally not secure) usage-examples
+    Base software: https://github.com/merbanan/rtl_433
+    Tested hardware: https://www.amazon.de/NooElec-NESDR-Mini-USB-Empf%C3%A4nger-Set-Female-SMA-Adapter/dp/B00VZ1AWQA/ref=sr_1_fkmrnull_2_sspa?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&keywords=sdr+433+stick&qid=1554484622&s=gateway&sr=8-2-fkmrnull-spons&psc=1
+
+
     restart: unless-stopped
     image: influxdb:latest
     networks:
@@ -76,15 +88,14 @@ services:
      environment:
        SDR_PARAMS: "-G"
        INFLUX_SRV: "influxdb"
+       INFLUX_SRV2: "< other influx-db>"
        INFLUX_PORT: "8086"
        INFLUX_USER: ""
        INFLUX_PW: ""
        INFLUX_NAME: "sensors"
-       LaCrosseTXSensor_ID125: "neighborhood"
-       Prologuesensor_ID5_RID83: "grill"
-       Prologuesensor_ID5_RID201: "livingroom"
-       Prologuesensor_ID5_RID240: "well"
+       Prologue_TH_SUBTYPE5_ID55: "livingroom"
+       Prologue_TH_SUBTYPE5_ID170: "well"
      devices:
-        - /dev/bus/usb/001/005
+        - /dev/bus/usb/001/008
      volumes:
-       - /etc/timezone:/etc/timezone
+       - /etc/timezone:/etc/timezone:ro
