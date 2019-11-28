@@ -12,7 +12,11 @@ drop_undefined_sensors = 0
 
 # get ENV
 
-dbsrv = os.environ['INFLUX_SRV']
+dbsrv_1  = os.environ['INFLUX_SRV']
+
+if os.environ['INFLUX_SRV2'] is not None:
+	dbsrv_2 = os.environ['INFLUX_SRV2']
+
 dbport = os.environ['INFLUX_PORT']
 dbuser = os.environ['INFLUX_USER']
 dbpw = os.environ['INFLUX_PW']
@@ -26,7 +30,7 @@ print("Got data: " + string_input)
 json_input = json.loads(string_input)
 
 # example-input from sensor
-# {'time': '2019-04-0316:45:06', 'model': 'LaCrosse-TX', 'id': 125, 'temperature_C': 19.3}
+# {"time":"2019-11-2814:09:37","model":"Prologue-TH","subtype":5,"id":55,"channel":1,"battery_ok":1,"temperature_C":22.900,"button":0,"humidity":15}
 
 # example-json for InfluxDB
 # json_body = [
@@ -58,23 +62,26 @@ measurement_name = ""
 
 if "model" in json_input:
 	measurement_name = json_input["model"]
+
+	# replace all hyphens as they are not allowed as environment variables
+	measurement_name = measurement_name.replace('-', '_')
 	json_input.pop("model")
 else:
 	measurement_name = "unkown_sensor"
+
+if "subtype" in json_input:
+	measurement_name = measurement_name + "_SUBTYPE" + str(json_input["subtype"])
+	json_input.pop("subtype")
 
 if "id" in json_input:
 	measurement_name = measurement_name + "_ID" + str(json_input["id"])
 	json_input.pop("id")
 
-if "rid" in json_input:
-	measurement_name = measurement_name + "_RID" + str(json_input["rid"])
-	json_input.pop("rid")
-
 # Look up if there is a user-defined name for this sensor in the env-variables
 # and use it as the name of the measurement.
 
-# Example: export VendorSensor_ID111_RID333="Garden-2"
-
+# Example: export Prologue-TH_SUBTYPE9_ID33 = "livingroom"
+ 
 if measurement_name in os.environ:
 	print("This sensor is well-known as " + os.environ[measurement_name] + ".")
 	tags["description"] = measurement_name
@@ -125,9 +132,15 @@ json_body = [ { "measurement" : measurement_name, "tags" : tags, "fields" : fiel
 # write data
 
 try:
-    client = InfluxDBClient(dbsrv, dbport, dbuser, dbpw, dbname)
-    client.write_points(json_body)
+	client = InfluxDBClient(dbsrv_1, dbport, dbuser, dbpw, dbname)
+	client.write_points(json_body)
 except:
-    print("Error writing to " + dbsrv + ":" + dbport + ".")
+	print("Error writing to " + dbsrv_1 + ":" + dbport + ".")
+
+try:
+	client = InfluxDBClient(dbsrv_2, dbport, dbuser, dbpw, dbname)
+	client.write_points(json_body)
+except:
+	print("Error writing to " + dbsrv_1 + ":" + dbport + ".")
 
 exit(0)
